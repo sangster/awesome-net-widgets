@@ -7,37 +7,38 @@ local module_path = (...):match ("(.+/)[^/]+$") or ""
 
 local internet = {}
 local function worker(args)
-  local args = args or {}
-  local widget = wibox.widget.background()
-  -- Icons made by http://www.flaticon.com/authors/maxim-basinski from www.flaticon.com 
-  local ICON_DIR = awful.util.getdir("config").."/"..module_path.."/net-widgets/icons/"
-  local yes_internet = wibox.widget {
-    {
-      widget = wibox.widget.imagebox,
-      image = ICON_DIR.."internet.png",
-      resize = false,
-    },
-    layout = wibox.container.margin(brightness_icon, 0, 0, 2)
-  }
-  local no_internet = wibox.widget {
-    {
-      widget = wibox.widget.imagebox,
-      image = ICON_DIR.."internet_na.png",
-      resize = false,
-    },
-    layout = wibox.container.margin(brightness_icon, 0, 0, 2)
-  }
-  -- Settings
-  local timeout = args.timeout or 5
-  local onclick = args.onclick
-  local showconnected = args.showconnected or false
+    local args = args or {}
+    local widget = wibox.widget.background()
 
-  local connected = false
+    -- Icons made by http://www.flaticon.com/authors/maxim-basinski from www.flaticon.com
+    local ICON_DIR = awful.util.getdir("config").."/"..module_path.."/net-widgets/icons/"
+    local yes_internet = wibox.widget {
+      {
+        widget = wibox.widget.imagebox,
+        image = ICON_DIR.."internet.png",
+        resize = false,
+      },
+      layout = wibox.container.margin(brightness_icon, 0, 0, 2)
+    }
+    local no_internet = wibox.widget {
+      {
+        widget = wibox.widget.imagebox,
+        image = ICON_DIR.."internet_na.png",
+        resize = false,
+      },
+      layout = wibox.container.margin(brightness_icon, 0, 0, 2)
+    }
+    -- Settings
+    local timeout = args.timeout or 5
+    local onclick = args.onclick
+    local showconnected = args.showconnected or false
 
-  widget:set_widget(no_internet)
-  local function net_update()
-    connected = false
-    awful.spawn.easy_async("bash -c \"nc -z 8.8.8.8 53 >/dev/null 2>&1\"",
+    local connected = false
+
+    widget:set_widget(no_internet)
+    local function net_update()
+      connected = false
+      awful.spawn.easy_async("bash -c \"nc -z 8.8.8.8 53 >/dev/null 2>&1\"",
       function(_, _, _, exit_code)
         if (exit_code == 0) then
           connected = true
@@ -49,25 +50,25 @@ local function worker(args)
             widget:set_widget(nil)
           end
         else
-            widget:set_widget(no_internet)
+          widget:set_widget(no_internet)
         end
       end)
 
-    return true
-  end
+      return true
+    end
 
-  net_update()
+    net_update()
 
-  gears.timer.start_new(timeout, net_update)
+    gears.timer.start_new(timeout, net_update)
 
-  -- Bind onclick event function
-  if onclick then
-    widget:buttons(awful.util.table.join(
-        awful.button({}, 1, function() awful.util.spawn(onclick) end)
-    ))
-  end
+    -- Bind onclick event function
+    if onclick then
+      widget:buttons(awful.util.table.join(
+      awful.button({}, 1, function() awful.util.spawn(onclick) end)
+      ))
+    end
 
-  return widget
+    return widget
 end
 return setmetatable(internet, {__call = function(_,...) return worker(...) end})
 
